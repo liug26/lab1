@@ -7,78 +7,79 @@
 
 int main(int argc, char *argv[])
 {
-	//checks to see if there are 1 argument
-	if (argc < 2){
-		fprintf(stderr, "Error: Invalid argument\n");
+    int num_programs = argc - 1;
+
+	if (num_programs < 1)
+    {
+		fprintf(stderr, "Error: No arguments\n");
         exit(EINVAL);
 	}
 
-	//first arg is program name
-	int num_programs = argc - 1;
-
-	//if there is 1 command (no pipe needed)
-	if (num_programs == 1){
+	if (num_programs == 1)
+    {
 		if (execlp(argv[1], argv[1], NULL) == -1){
-			fprintf(stderr, "Error: execlp\n");
+			fprintf(stderr, "Error: execlp returns -1\n");
             exit(1);
 		}
 	}
-	else{
-		//an array that store fds
-		int pipe_fd[num_programs-1][2];
-		int i;
-		for (i = 0; i < num_programs; i++){
-	
-			//create one less pipe than program
-			if (i < num_programs - 1) {
-            	if (pipe(pipe_fd[i]) == -1) {
-					fprintf(stderr, "Error: pipe\n");
+	else
+    {
+		int fds[num_programs - 1][2];
+		for (int i = 0; i < num_programs; i++)
+        {
+			// if not last program
+			if (i < num_programs - 1)
+            {
+            	if (pipe(fds[i]) == -1)
+                {
+					fprintf(stderr, "Error when creating pipe\n");
             		exit(1);
             	}
         	}
 
-			pid_t child_pid = fork();
+			pid_t pid = fork();
 
-			if (child_pid == 0) {
-				//child process 
-
-				if(i > 0){
-					dup2(pipe_fd[i-1][0],STDIN_FILENO); //redirect fd0 to read from last output 
-				}
+            // CHILD
+			if (pid == 0)
+            {
+				if(i > 0)
+					dup2(fds[i - 1][0], STDIN_FILENO);
 				
-				if( i < num_programs -1){
-					dup2(pipe_fd[i][1],STDOUT_FILENO); //redirect fd1 to write
-					close(pipe_fd[i][0]); //close curr read and right pipe
-					close(pipe_fd[i][1]);
+				if(i < num_programs - 1)
+                {
+					dup2(fds[i][1], STDOUT_FILENO);
+					close(fds[i][0]);
+					close(fds[i][1]);
 				}
 
-				//replace curr with the command
-				if (execlp(argv[i+1], argv[i+1], NULL) == -1){
-					fprintf(stderr, "Error: execlp\n");
+                // run program
+				if (execlp(argv[i + 1], argv[i + 1], NULL) == -1)
+                {
+					fprintf(stderr, "Error: execlp returns -1\n");
             		exit(1);
 				}
-			}		 
-			else if (child_pid > 0){
-				//parent process
-
-				//wait
+			}
+            // PARENT
+			else if (pid > 0)
+            {
 				int status;
-				waitpid(child_pid, &status, 0);
+				waitpid(pid, &status, 0);
 
-				//if child exit 1 the main program also exit 1
-				if (WEXITSTATUS(status) == 1) {
-					fprintf(stderr, "child's error\n");
+				if (WEXITSTATUS(status) == 1)
+                {
+					fprintf(stderr, "Child exits with error\n");
 					return 1;
 				}
 
-				close(pipe_fd[i][1]); //close write pipe
+                if (i > 0)
+					close(fds[i-1][0]);
 
-				if( i > 0){
-					close(pipe_fd[i-1][0]); //close the previous read pipe
-				}
+				if (i < num_programs - 1)
+                    close(fds[i][1]);
 			} 
-			else {
-				fprintf(stderr, "Error: fork\n");
+			else
+            {
+				fprintf(stderr, "Fork error\n");
             	exit(1);
 			}
 		}
