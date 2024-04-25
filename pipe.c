@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 				int status;
 				waitpid(pid, &status, 0);
 
-				if (!WIFEXITED(status))
+				if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
                 {
 					fprintf(stderr, "Child exits with error\n");
 					return WEXITSTATUS(status);
