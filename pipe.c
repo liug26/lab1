@@ -55,9 +55,8 @@ int main(int argc, char *argv[])
                 // run program
 				if (execlp(argv[i + 1], argv[i + 1], NULL) == -1)
                 {
-					fprintf(stderr, "Error: execlp returns -1\n");
                     perror("execlp");
-            		return 1;
+            		exit(1);
 				}
 			}
             // PARENT
