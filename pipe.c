@@ -56,7 +56,8 @@ int main(int argc, char *argv[])
 				if (execlp(argv[i + 1], argv[i + 1], NULL) == -1)
                 {
 					fprintf(stderr, "Error: execlp returns -1\n");
-            		exit(1);
+                    perror("execlp");
+            		return 1;
 				}
 			}
             // PARENT
@@ -65,14 +66,14 @@ int main(int argc, char *argv[])
 				int status;
 				waitpid(pid, &status, 0);
 
-				if (WEXITSTATUS(status) == 1)
+				if (!WIFEXITED(status))
                 {
 					fprintf(stderr, "Child exits with error\n");
-					return 1;
+					return WEXITSTATUS(status);
 				}
 
                 if (i > 0)
-					close(fds[i-1][0]);
+					close(fds[i - 1][0]);
 
 				if (i < num_programs - 1)
                     close(fds[i][1]);
