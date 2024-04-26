@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     {
 		if (execlp(argv[1], argv[1], NULL) == -1){
 			perror("execlp");
-            exit(1);
+            exit(errno);
 		}
 	}
 	else
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
             	if (pipe(fds[i]) == -1)
                 {
 					fprintf(stderr, "Error when creating pipe\n");
-            		exit(1);
+            		exit(errno);
             	}
         	}
 
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 				if (execlp(argv[i + 1], argv[i + 1], NULL) == -1)
                 {
                     perror("execlp");
-            		exit(1);
+            		exit(errno);
 				}
 			}
             // PARENT
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 			else
             {
 				fprintf(stderr, "Fork error\n");
-            	exit(1);
+            	exit(errno);
 			}
 		}
 	}
