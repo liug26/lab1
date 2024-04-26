@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 	if (num_programs == 1)
     {
 		if (execlp(argv[1], argv[1], NULL) == -1){
-			fprintf(stderr, "Error: execlp returns -1\n");
+			perror("execlp");
             exit(1);
 		}
 	}
